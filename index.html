@@ -1,0 +1,89 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+
+		<!-- jQuery -->
+		<script src="static/js/jquery-3.1.1.min.js"></script>
+
+		<style>
+			body { background-color: #ddd; font-family: monospace; }
+			td 	 { padding: 4px; font-size: 2em; }
+			p 	 { text-align: center; }
+			.value_cell { text-align: right; width: 80px; }
+		</style>
+	</head>
+
+	<body>
+		<table style="margin: 40px auto">
+			<tr> <td>current</td> <td id="current" class="value_cell" ></td> <td>A</td> </tr>
+			<tr> <td>power* </td> <td id="power" class="value_cell" ></td>	 <td>W</td> </tr>
+		</table>
+
+		<p>*power assumes battery voltage 52 V</p>
+
+		<script>
+			// Default username and password for authentication - change if needed
+			var user = 'admin'
+			var password = '00000000'
+			var headers = { "Authorization": "Basic " + btoa(user + ":" + password) }
+
+			// URL for requesting - change IP according to your device
+			var wise_ip = '10.0.1.100'
+			var analog_channel = '/ai_value/slot_0/ch_0'
+			var url = 'http://' + wise_ip + analog_channel
+
+			function update() {
+				get_data()
+			}
+
+			// Request without authentication (Firefox, Chrome)
+			function get_data() {
+	        	$.ajax({
+					url: url,
+				  	dataType: 'json',
+				  	success: function(data) {
+				  		write_data(data)
+				  	},
+				  	error: function(){
+				  		get_data_auth()
+				  	}
+				});
+			}
+
+			// Request with authentication (Safari)
+			function get_data_auth() {
+	        	$.ajax({
+					url: url,
+					headers: headers,
+				  	dataType: 'json',
+				  	success: function(data) {
+				  		write_data(data)
+				  	}
+				});
+			}
+
+			function write_data(data) {
+            	var current_reading = data.Eg
+				var voltage = 52 // Assume voltage 52 V. Read this from other source if possible
+
+            	var output_current = convert_value(current_reading).toFixed(1)
+            	var output_power = (output_current * voltage).toFixed(0)
+
+            	document.getElementById("current").innerHTML = output_current
+            	document.getElementById("power").innerHTML = output_power
+			}
+
+			// Sensor signal is 4-20 mA for measured 0-100 A
+			function convert_value(val) {
+				var current = 25 * (val / 1000.0 / 4 - 1)
+				return current
+			}
+
+			// Run the first iteration
+			update()
+
+			// Repeat continuously
+			setInterval( function() { update() }, 2 * 1 * 1000);
+		</script>
+	</body>
+</html>
