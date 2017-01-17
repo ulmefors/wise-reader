@@ -6,20 +6,39 @@
 		<script src="static/js/jquery-3.1.1.min.js"></script>
 
 		<style>
-			body { background-color: #ddd; font-family: monospace; }
-			td 	 { padding: 4px; font-size: 2em; }
-			p 	 { text-align: center; }
-			.value_cell { text-align: right; width: 80px; }
+			#container 	{ width: 300px; margin: 40px auto}
+			#error 		{ color:red; }
+			body 	{ background-color: #ddd; font-family: monospace; }
+			td 	 	{ padding: 2px; font-size: 2.5em; }
+			p    	{ padding-top: 5px;}
+			a    	{ font-size: 1.5em;}
+			table	{ width: 100%; }
+			.value_cell  { text-align: right; }
 		</style>
 	</head>
 
 	<body>
-		<table style="margin: 40px auto">
-			<tr> <td>current</td> <td id="current" class="value_cell" ></td> <td>A</td> </tr>
-			<tr> <td>power* </td> <td id="power" class="value_cell" ></td>	 <td>W</td> </tr>
-		</table>
 
-		<p>*power assumes battery voltage 52 V</p>
+		<div id="container">
+			<table style="margin: 10px 0px">
+				<tr> <td>current</td> <td id="current" class="value_cell" ></td> <td>A</td> </tr>
+				<tr> <td>power* </td> <td id="power" class="value_cell" ></td>	 <td>W</td> </tr>
+			</table>
+		
+			<p><a id="home-link">WISE home</a></p>
+			<p><a id="config-link">WISE config</a></p>
+
+			<p id="error" class="center"> </p>
+
+			<p class="center" style="margin-top: 20px">*power assumes battery voltage 52 V</p>
+			<p class="center">Tested on Mac OS 10.11.6 with the following browsers</p>
+			<ul class="center">
+				<li>Safari 10.0.2</li>
+				<li>Firefox 50.1.0</li>
+				<li>Chrome 55.0.2883.95</li>
+			</ul>
+
+		</div>		
 
 		<script>
 			// Default username and password for authentication - change if needed
@@ -28,9 +47,12 @@
 			var headers = { "Authorization": "Basic " + btoa(user + ":" + password) }
 
 			// URL for requesting - change IP according to your device
-			var wise_ip = '10.0.1.100'
+			var wise_ip = 'http://10.0.1.100'
 			var analog_channel = '/ai_value/slot_0/ch_0'
-			var url = 'http://' + wise_ip + analog_channel
+			var url = wise_ip + analog_channel
+
+			document.getElementById('home-link').href = wise_ip;
+			document.getElementById('config-link').href = wise_ip + '/config';
 
 			function update() {
 				get_data()
@@ -71,6 +93,12 @@
 
             	document.getElementById("current").innerHTML = output_current
             	document.getElementById("power").innerHTML = output_power
+
+            	error_msg = " "
+            	if (current_reading == 20000) {
+            		error_msg = "Received value is maximum allowed which may be due to error. Verify that the transducer is installed and connected correctly to the WISE."
+            	}
+            	document.getElementById("error").innerHTML = error_msg
 			}
 
 			// Sensor signal is 4-20 mA for measured 0-100 A
